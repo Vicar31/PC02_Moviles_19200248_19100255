@@ -1,5 +1,6 @@
 package com.example.pc02_moviles.presentation.liga1
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,10 +14,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,9 +46,13 @@ fun Liga1RegistrationScreen(navController: NavController) {
                 title = { Text("Registro de Liga 1") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = MaterialTheme.colorScheme.onPrimary)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }
     ) { paddingValues ->
@@ -84,10 +93,35 @@ fun Liga1RegistrationScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { navController.navigate("equipos") },
+                onClick = { 
+                    val db = Firebase.firestore
+                    val team = hashMapOf(
+                        "name" to teamName,
+                        "year" to foundationYear,
+                        "titles" to titlesWon,
+                        "imageUrl" to imageUrl
+                    )
+
+                    db.collection("equipos")
+                        .add(team)
+                        .addOnSuccessListener { documentReference ->
+                            Log.d("Liga1RegistrationScreen", "DocumentSnapshot added with ID: ${documentReference.id}")
+                            navController.navigate("equipos")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.w("Liga1-RegistrationScreen", "Error adding document", e)
+                        }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Registrar Equipo")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = { navController.navigate("equipos") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ver Equipos")
             }
         }
     }
